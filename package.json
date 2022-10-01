@@ -2,7 +2,7 @@
   "name": "color-him",
   "displayName": "Color Him",
   "description": "Color code by author",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "engines": {
     "vscode": "^1.71.0"
   },
