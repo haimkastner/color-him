@@ -52,7 +52,7 @@ jobs:
           npm ci
 
       - name: Get the version
-        id: get_version
+        id: update_version
         run: |
           echo ::set-output name=version::$(npm --no-git-tag-version --tag-version-prefix= version patch)
           echo ::set-output name=title::$( git log -1 --pretty=%B | sed -n '1p')
