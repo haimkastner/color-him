@@ -65,7 +65,7 @@ jobs:
       - name: Build & Test 🔧
         run: |
           mkdir bin
-          vsce package --out "bin"
+          vsce package --out "bin/color-him.vsix"
 
       - name: Upload bin extension
         uses: actions/upload-artifact@v2
@@ -98,6 +98,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./bin/color-him-${{ steps.update_version.outputs.version }}.vsix
+          asset_path: ./bin/color-him.vsix
           asset_name: color-him.vsix
           asset_content_type: application/octet-stream
