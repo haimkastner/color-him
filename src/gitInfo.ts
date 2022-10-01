@@ -13,6 +13,28 @@ export interface GitLineInfo {
     lineTimestamp: Date;
 }
 
+export async function getGitCurrentHead(filePath: string): Promise<string> {
+    try {
+
+        const options: Partial<SimpleGitOptions> = {
+            baseDir: dirname(filePath),
+            binary: 'git',
+            maxConcurrentProcesses: 6,
+            trimmed: false,
+        };
+
+        const git: SimpleGit = simpleGit(options);
+
+        const head = await git.raw('rev-parse', '--short', 'HEAD');
+     
+        return head;
+
+    } catch (e: any) {
+        console.error(`Could not run git rev-parse: ${e.message}`);
+        return '';
+    }
+}
+
 export async function getFileGitInfo(filePath: string): Promise<GitLineInfo[]> {
     let blameOutput: string = '';
     try {

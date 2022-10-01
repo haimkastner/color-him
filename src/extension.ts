@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import debounce from 'lodash.debounce';
-import { getFileGitInfo, GitLineInfo } from './gitInfo';
+import { getFileGitInfo, getGitCurrentHead, GitLineInfo } from './gitInfo';
 import { TextEditorDecorationType } from 'vscode';
 
 interface AuthorsDangerItem {
@@ -28,6 +28,12 @@ const colorDecorationsPool = new Map<number, TextEditorDecorationType>();
 
 /** A map of a decorator color show show for a given author email */
 const colorDecorationByAuthor = new Map<string, TextEditorDecorationType | undefined>();
+
+/** Hold git info per file */
+const cacheFileGitInfo = new Map<string, GitLineInfo[]>();
+
+/** Hold latest git head, once it will be changed clear @see cacheFileGitInfo cache */
+let gitLatestKnownHead = '';
 
 /** The authors danger level config collection */
 let authorsDangerConfig: AuthorsDangerItem[];
@@ -99,7 +105,7 @@ function calcLineColorDecoration(gitLineInfo: GitLineInfo, editorLineContent: st
 		return;
 	}
 
-	// Check if it's the same as last git commit
+	// Check if it's the same as last git commit (use ! for better performance)
 	const lineModified = gitLineInfo.lineContent !== editorLineContent;
 	// If not.. skip this line
 	if (lineModified) {
@@ -152,13 +158,39 @@ function getEditorDocumentTextByLinesTrimmed(editor: vscode.TextEditor): { [line
 }
 
 /**
+ * Get current document fit info
+ * @param documentFilePath The document file path
+ * @returns The document git info
+ */
+async function getDocumentGitInfo(documentFilePath: string): Promise<GitLineInfo[]> {
+	// Get current git head
+	const currentGitHead = await getGitCurrentHead(documentFilePath);
+
+	// Uf ut was change since last check, clear git info cache and update gitLatestKnownHead 
+	if (currentGitHead !== gitLatestKnownHead) {
+		cacheFileGitInfo.clear();
+		gitLatestKnownHead = currentGitHead;
+	}
+
+	// If info already cached, return it
+	if (cacheFileGitInfo.has(documentFilePath)) {
+		return cacheFileGitInfo.get(documentFilePath) as GitLineInfo[];
+	}
+
+	// Get info, and keep it for farther use
+	const fileLinesGitInfo = await getFileGitInfo(documentFilePath);
+	cacheFileGitInfo.set(documentFilePath, fileLinesGitInfo);
+	return fileLinesGitInfo;
+}
+
+/**
  * Set color decoration per author at the document.
  * @param editor The opened editor
  */
 async function setDocumentAuthorsDangerColor(editor: vscode.TextEditor) {
 
 	// First, get git info on current doc
-	const fileLinesGitInfo = await getFileGitInfo(editor.document.uri.fsPath);
+	const fileLinesGitInfo = await getDocumentGitInfo(editor.document.uri.fsPath);
 
 	// Get all current document text map by lines index
 	const linesContentMap = getEditorDocumentTextByLinesTrimmed(editor);
