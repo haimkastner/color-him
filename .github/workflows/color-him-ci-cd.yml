@@ -85,9 +85,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.get_version.outputs.version }}
-          release_name: ${{  steps.get_version.outputs.title }}
-          body: ${{  steps.get_version.outputs.body }}
+          tag_name: ${{ steps.update_version.outputs.version }}
+          release_name: ${{  steps.update_version.outputs.title }}
+          body: ${{  steps.update_version.outputs.body }}
           draft: false
           prerelease: false
 
