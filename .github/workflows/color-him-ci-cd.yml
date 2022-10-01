@@ -22,4 +22,11 @@ jobs:
 
       - name: Build & Test 🔧
         run: |
-          npm run package
+          mkdir bin
+          vsce package --out "bin"
+
+      - name: Upload bin extension
+        uses: actions/upload-artifact@v2
+        with:
+          name: extension
+          path: bin

@@ -2,7 +2,7 @@
   "name": "color-him",
   "displayName": "Color Him",
   "description": "Color code by author",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "engines": {
     "vscode": "^1.71.0"
   },
@@ -10,9 +10,13 @@
     "Other"
   ],
   "activationEvents": [
-    "*"
+    "onStartupFinished"
   ],
   "main": "./dist/extension.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/haimkastner/color-him.git"
+  },
   "contributes": {
     "commands": [
       {
