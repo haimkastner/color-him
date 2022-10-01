@@ -30,3 +30,74 @@ jobs:
         with:
           name: extension
           path: bin
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [16.x]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install node
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Prepare dependencies
+        run: |
+          npm install -g vsce
+          npm ci
+
+      - name: Get the version
+        id: get_version
+        run: |
+          echo ::set-output name=version::$(npm --no-git-tag-version --tag-version-prefix= version patch)
+          echo ::set-output name=title::$( git log -1 --pretty=%B | sed -n '1p')
+          body=$(git log -1 --pretty=%B | sed 1d)
+          body="${body//'%'/'%25'}"
+          body="${body//$'\n'/'%0A'}"
+          body="${body//$'\r'/'%0D'}"
+          echo ::set-output name=body::$body
+
+      - name: Build & Test 🔧
+        run: |
+          mkdir bin
+          vsce package --out "bin"
+
+      - name: Upload bin extension
+        uses: actions/upload-artifact@v2
+        with:
+          name: extension
+          path: bin
+
+      - name: Commit and push version
+        uses: devops-infra/action-commit-push@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          commit_message: Update to version ${{ steps.update_version.outputs.version }} [skip-ci]
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.version }}
+          release_name: ${{  steps.get_version.outputs.title }}
+          body: ${{  steps.get_version.outputs.body }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Extension
+        id: upload-extension
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/color-him-${{ steps.update_version.outputs.version }}.vsix
+          asset_name: color-him.vsix
+          asset_content_type: application/octet-stream
