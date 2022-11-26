@@ -79,7 +79,7 @@ function getColorDecorationByDangerLevel(dangerLevel: number): TextEditorDecorat
 
 	// Create a new instance, keep it in the pool, and return it
 	const colorDecoration = vscode.window.createTextEditorDecorationType({
-		backgroundColor: `hsla(0, ${dangerLevel}%, 50%, 0.35)`,
+		backgroundColor: `hsla(30, ${dangerLevel}%, 50%, 0.35)`,
 		isWholeLine: true,
 	});
 	colorDecorationsPool.set(dangerLevel, colorDecoration);
